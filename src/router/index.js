@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Login from "../views/Login.vue";
 import Signup from "../views/Signup.vue";
 import Home from "../views/Home.vue";
+import CreateReview from "../views/CreateReview.vue";
 import { useAuthStore } from "@/stores/Auth";
 
 const routes = [
@@ -19,6 +20,11 @@ const routes = [
   {
     path: "/home",
     component: Home,
+    meta: { auth: true },
+  },
+  {
+    path: "/create/review",
+    component: CreateReview,
     meta: { auth: true },
   },
 ];

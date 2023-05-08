@@ -33,6 +33,7 @@ export const useAuthStore = defineStore({
     },
     logout() {
       this.token = null;
+      router.push("/");
     },
   },
 });
