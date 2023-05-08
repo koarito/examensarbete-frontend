@@ -65,20 +65,22 @@ export default {
       const tempTeam = teams.value.find(
         (team) => team.name === selectedTeam.value
       );
-      return tempTeam.developers.filter(
-        (developer) => values.reviewersIds.includes(developer.id) ?? null
-      );
+      return tempTeam
+        ? tempTeam.developers.filter((developer) =>
+            values.reviewersIds.includes(developer.id)
+          )
+        : [];
     });
 
     const nonAssignedDevs = computed(() => {
       const tempTeam = teams.value.find(
         (team) => team.name === selectedTeam.value
       );
-      return (
-        tempTeam.developers.filter(
-          (developer) => !values.reviewersIds.includes(developer.id)
-        ) ?? null
-      );
+      return tempTeam
+        ? tempTeam.developers.filter(
+            (developer) => !values.reviewersIds.includes(developer.id)
+          )
+        : [];
     });
     const teamNames = computed(() => {
       const temp = [];
