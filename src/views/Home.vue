@@ -1,4 +1,4 @@
-<template lang="">
+<template>
   <div class="d-flex justify-center align-center padding flex-column">
     <v-sheet elevation="10" color="#fab9cc" rounded class="wi">
       <div class="d-flex align-center w-100">

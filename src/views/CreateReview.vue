@@ -1,48 +1,95 @@
 <template>
-  <div class="wi padding">
-    <v-sheet elevation="10" rounded class="wi">
-      <div class="text-h3 text-center">Create Review</div>
-      <v-form>
-        <div class="d-flex flex-column w-100">
-          <div class="w-50 mx-auto">
-            <v-text-field
-              type="text"
-              color="primary"
-              label="Jira id"
-              v-model="values.jiraId"
-            />
-          </div>
-          <div class="w-50 mx-auto">
-            <v-text-field
-              type="text"
-              color="primary"
-              label="Git link"
-              v-model="values.gitLink"
-            />
-          </div>
-          <div class="w-50 mx-auto">
-            <v-text-field
-              type="text"
-              color="primary"
-              label="Git branch"
-              v-model="values.branch"
-            />
-          </div>
-          <div class="w-25 mx-auto">
-            <v-select label="Team" :items="teamNames" v-model="selectedTeam" />
-          </div>
-          <div class="d-flex flex-self-start w-25">
-            <div class="text-h6 text-center">Assigned Devs</div>
-            <v-input
-              append-icon="mdi-close"
-              v-for="dev in assignedDevs"
-              :key="dev.id"
-            ></v-input>
-          </div>
-        </div>
-      </v-form>
-    </v-sheet>
-  </div>
+  <v-form @submit="handleSubmit()">
+    <div class="padding">
+      <v-sheet elevation="10" rounded class="wi">
+        <v-container
+          class="d-flex wi justify-space-between flex-column align-center"
+        >
+          <v-row>
+            <v-col>
+              <div class="text-h3 text-center">Create Review</div>
+            </v-col>
+          </v-row>
+          <v-row class="w-50">
+            <v-col>
+              <v-text-field
+                type="text"
+                color="primary"
+                label="Jira id"
+                v-model="values.jiraId"
+              />
+            </v-col>
+          </v-row>
+
+          <v-row class="w-50">
+            <v-col>
+              <v-text-field
+                type="text"
+                color="primary"
+                label="Git link"
+                v-model="values.gitLink"
+              />
+            </v-col>
+          </v-row>
+          <v-row class="w-50">
+            <v-col>
+              <v-text-field
+                type="text"
+                color="primary"
+                label="Git branch"
+                v-model="values.branch"
+              />
+            </v-col>
+          </v-row>
+          <v-row class="w-25">
+            <v-col>
+              <v-select
+                label="Team"
+                :items="teamNames"
+                v-model="selectedTeam"
+              />
+            </v-col>
+          </v-row>
+          <v-row class="w-100">
+            <v-col align-self="end">
+              <div class="text-h6 text-center">Assigned Devs</div>
+              <v-list bg-color="primary">
+                <v-list-item
+                  v-for="dev in assignedDevs"
+                  :key="dev.id"
+                  :border="true"
+                  :title="dev.firstName + ' ' + dev.lastName"
+                  append-icon="mdi-minus-circle"
+                  prepend-icon="mdi-account"
+                  @click="handleDev(false, dev.id)"
+                />
+              </v-list>
+            </v-col>
+            <v-spacer />
+            <v-col>
+              <div class="text-h6 text-center">Non Assigned Devs</div>
+              <v-list bg-color="primary">
+                <v-list-item
+                  v-for="dev in nonAssignedDevs"
+                  :key="dev.id"
+                  :border="true"
+                  :title="dev.firstName + ' ' + dev.lastName"
+                  append-icon="mdi-plus"
+                  prepend-icon="mdi-account"
+                  @click="handleDev(true, dev.id)"
+                />
+              </v-list>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-btn color="secondary" type="submit">Create Review</v-btn>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-sheet>
+    </div>
+  </v-form>
 </template>
 <script>
 import { reactive, ref, onMounted } from "vue";
@@ -60,6 +107,32 @@ export default {
     });
     const teams = ref([]);
     const selectedTeam = ref("");
+
+    function handleDev(addDev, devId) {
+      if (addDev) values.reviewersIds.push(devId);
+      else {
+        values.reviewersIds.splice(values.reviewersIds.indexOf(devId), 1);
+      }
+    }
+    function handleSubmit() {
+      axios
+        .post("http://localhost:8080/review/create", values, {
+          headers: { Authorization: "Bearer " + useAuthStore().getToken },
+        })
+        .catch((error) => {
+          if (error.response) {
+            console.log("Data :", error.response.data);
+            console.log("Status :" + error.response.status);
+            if (error.response.status == 500) {
+              useAuthStore().logout();
+            }
+          } else if (error.request) {
+            console.log(error.request);
+          } else {
+            console.log("Error", error.message);
+          }
+        });
+    }
 
     const assignedDevs = computed(() => {
       const tempTeam = teams.value.find(
@@ -115,7 +188,15 @@ export default {
       loadTeams();
     });
 
-    return { values, teamNames, selectedTeam, assignedDevs, nonAssignedDevs };
+    return {
+      values,
+      teamNames,
+      selectedTeam,
+      assignedDevs,
+      nonAssignedDevs,
+      handleDev,
+      handleSubmit,
+    };
   },
 };
 </script>
