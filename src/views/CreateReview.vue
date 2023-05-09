@@ -1,5 +1,5 @@
 <template>
-  <v-form @submit="handleSubmit()">
+  <v-form @submit.stop.prevent="handleSubmit">
     <div class="padding">
       <v-sheet elevation="10" rounded class="wi">
         <v-container
@@ -96,6 +96,7 @@ import { reactive, ref, onMounted } from "vue";
 import axios from "axios";
 import { useAuthStore } from "@/stores/Auth";
 import { computed } from "vue";
+import router from "@/router";
 
 export default {
   setup() {
@@ -119,6 +120,7 @@ export default {
         .post("http://localhost:8080/review/create", values, {
           headers: { Authorization: "Bearer " + useAuthStore().getToken },
         })
+        .then(router.push)
         .catch((error) => {
           if (error.response) {
             console.log("Data :", error.response.data);
@@ -132,6 +134,7 @@ export default {
             console.log("Error", error.message);
           }
         });
+      router.push("/home");
     }
 
     const assignedDevs = computed(() => {
