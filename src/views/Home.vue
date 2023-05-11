@@ -55,7 +55,11 @@
                 <td>{{ review.jiraId }}</td>
                 <td>{{ review.gitLink }}</td>
                 <td>{{ review.branch }}</td>
-                <td><v-btn color="primary">Edit</v-btn></td>
+                <td>
+                  <v-btn :to="'/edit/review/' + review.id" color="primary"
+                    >Edit</v-btn
+                  >
+                </td>
               </tr>
             </tbody>
           </v-table>

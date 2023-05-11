@@ -4,6 +4,7 @@ import Login from "../views/Login.vue";
 import Signup from "../views/Signup.vue";
 import Home from "../views/Home.vue";
 import CreateReview from "../views/CreateReview.vue";
+import EditReview from "../views/EditReview.vue";
 import { useAuthStore } from "@/stores/Auth";
 
 const routes = [
@@ -26,6 +27,12 @@ const routes = [
     path: "/create/review",
     component: CreateReview,
     meta: { auth: true },
+  },
+  {
+    path: "/edit/review/:reviewId",
+    component: EditReview,
+    meta: { auth: true },
+    props: true,
   },
 ];
 

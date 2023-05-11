@@ -7,7 +7,7 @@
         >
           <v-row>
             <v-col>
-              <div class="text-h3 text-center">Create Review</div>
+              <div class="text-h3 text-center">Edit Review</div>
             </v-col>
           </v-row>
           <v-row class="w-50">
@@ -83,7 +83,7 @@
           </v-row>
           <v-row>
             <v-col>
-              <v-btn color="secondary" type="submit">Create Review</v-btn>
+              <v-btn color="secondary" type="submit">Edit Review</v-btn>
             </v-col>
           </v-row>
         </v-container>
@@ -92,12 +92,10 @@
   </v-form>
 </template>
 <script>
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { useAuthStore } from "@/stores/Auth";
-import { computed } from "vue";
-import router from "@/router";
-
+import { useRoute } from "vue-router";
 export default {
   setup() {
     const values = reactive({
@@ -108,34 +106,6 @@ export default {
     });
     const teams = ref([]);
     const selectedTeam = ref("");
-
-    function handleDev(addDev, devId) {
-      if (addDev) values.reviewersIds.push(devId);
-      else {
-        values.reviewersIds.splice(values.reviewersIds.indexOf(devId), 1);
-      }
-    }
-    function handleSubmit() {
-      axios
-        .post("http://localhost:8080/review/create", values, {
-          headers: { Authorization: "Bearer " + useAuthStore().getToken },
-        })
-        .then(router.push)
-        .catch((error) => {
-          if (error.response) {
-            console.log("Data :", error.response.data);
-            console.log("Status :" + error.response.status);
-            if (error.response.status == 500) {
-              useAuthStore().logout();
-            }
-          } else if (error.request) {
-            console.log(error.request);
-          } else {
-            console.log("Error", error.message);
-          }
-        });
-      router.push("/home");
-    }
 
     const assignedDevs = computed(() => {
       const tempTeam = teams.value.find(
@@ -158,6 +128,7 @@ export default {
           )
         : [];
     });
+
     const teamNames = computed(() => {
       const temp = [];
       teams.value.forEach((team) => {
@@ -165,6 +136,45 @@ export default {
       });
       return temp;
     });
+
+    function handleDev(addDev, devId) {
+      if (addDev) values.reviewersIds.push(devId);
+      else {
+        values.reviewersIds.splice(values.reviewersIds.indexOf(devId), 1);
+      }
+    }
+    async function loadReview() {
+      await axios
+        .get(
+          `http://localhost:8080/review/get/review/${
+            useRoute().params.reviewId
+          }`,
+          {
+            headers: { Authorization: "Bearer " + useAuthStore().getToken },
+          }
+        )
+        .then((response) => {
+          response.data.reviewers.forEach((reviewer) =>
+            values.reviewersIds.push(reviewer.id)
+          );
+          values.jiraId = response.data.jiraId;
+          values.gitLink = response.data.gitLink;
+          values.branch = response.data.branch;
+        })
+        .catch((error) => {
+          if (error.response) {
+            console.log("Data :", error.response.data);
+            console.log("Status :" + error.response.status);
+            if (error.response.status == 500) {
+              useAuthStore().logout();
+            }
+          } else if (error.request) {
+            console.log(error.request);
+          } else {
+            console.log("Error", error.message);
+          }
+        });
+    }
     async function loadTeams() {
       await axios
         .get("http://localhost:8080/user/teams", {
@@ -190,16 +200,17 @@ export default {
     }
     onMounted(() => {
       loadTeams();
+      loadReview();
     });
 
     return {
+      handleDev,
       values,
-      teamNames,
+      teams,
       selectedTeam,
       assignedDevs,
       nonAssignedDevs,
-      handleDev,
-      handleSubmit,
+      teamNames,
     };
   },
 };
