@@ -12,19 +12,49 @@
                 <th>Jira</th>
                 <th>Merge Request</th>
                 <th>Git branch</th>
-                <th>Grade Action</th>
+                <th class="text-center">Grade Action</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="review in assignedReviews.value" :key="review.id">
-                <td>{{ review.status }}</td>
+                <td>
+                  {{ review.status }}
+                  <v-tooltip :text="reviewGrades(review)" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-icon
+                        size="small"
+                        icon="mdi-help-circle"
+                        v-bind="props"
+                      />
+                    </template>
+                  </v-tooltip>
+                </td>
                 <td>
                   {{ review.author.firstName + " " + review.author.lastName }}
                 </td>
                 <td>{{ review.jiraId }}</td>
                 <td>{{ review.gitLink }}</td>
                 <td>{{ review.branch }}</td>
-                <td><v-btn color="primary">chikoni</v-btn></td>
+                <td class="d-flex flex-row justify-space-between">
+                  <div>
+                    <v-btn
+                      elevation="10"
+                      color="primary"
+                      density="comfortable"
+                      icon="mdi-plus"
+                      @click="setGrade(review, 'POSITIVE')"
+                    />
+                  </div>
+                  <div>
+                    <v-btn
+                      elevation="10"
+                      color="primary"
+                      density="comfortable"
+                      icon="mdi-minus"
+                      @click="setGrade(review, 'NEGATIVE')"
+                    />
+                  </div>
+                </td>
               </tr>
             </tbody>
           </v-table>
@@ -51,7 +81,9 @@
             </thead>
             <tbody>
               <tr v-for="review in ownReviews.value" :key="review.id">
-                <td>{{ review.status }}</td>
+                <td>
+                  {{ review.status }}
+                </td>
                 <td>{{ review.jiraId }}</td>
                 <td>{{ review.gitLink }}</td>
                 <td>{{ review.branch }}</td>
@@ -74,13 +106,55 @@
 <script>
 import { useAuthStore } from "@/stores/Auth";
 import axios from "axios";
-import { reactive, onMounted } from "vue";
+import { reactive, onMounted, ref } from "vue";
 export default {
   setup() {
     const assignedReviews = reactive([]);
     const ownReviews = reactive([]);
 
-    async function loadReviews() {
+    function reviewGrades(review) {
+      return review
+        ? review.grades
+            .map((grade) => {
+              if (grade.grade == "POSITIVE")
+                return `${grade.user.firstName} ${grade.user.lastName}: +`;
+              else if (grade.grade == "NEGATIVE")
+                return `${grade.user.firstName} ${grade.user.lastName}: -`;
+              return `${grade.user.firstName} ${grade.user.lastName}: No grade`;
+            })
+            .toString()
+            .replaceAll(",", ", ")
+        : "";
+    }
+
+    async function setGrade(review, grade) {
+      await axios
+        .patch(
+          `http://localhost:8080/review/update/grade?reviewId=${review.id}&grade=${grade}`,
+          null,
+          {
+            headers: {
+              Authorization: "Bearer " + useAuthStore().getToken,
+            },
+          }
+        )
+        .then(loadAssignedReviews())
+        .catch((error) => {
+          if (error.response) {
+            console.log("Data :", error.response.data);
+            console.log("Status :" + error.response.status);
+            if (error.response.status == 500) {
+              useAuthStore().logout();
+            }
+          } else if (error.request) {
+            console.log(error.request);
+          } else {
+            console.log("Error", error.message);
+          }
+        });
+    }
+
+    async function loadAssignedReviews() {
       await axios
         .get("http://localhost:8080/review/get/assigned/reviews", {
           headers: {
@@ -103,7 +177,9 @@ export default {
             console.log("Error", error.message);
           }
         });
+    }
 
+    async function loadReviews() {
       await axios
         .get("http://localhost:8080/review/get/reviews", {
           headers: {
@@ -129,9 +205,16 @@ export default {
     }
     onMounted(() => {
       loadReviews();
+      loadAssignedReviews();
     });
 
-    return { useAuthStore, assignedReviews, ownReviews };
+    return {
+      useAuthStore,
+      assignedReviews,
+      ownReviews,
+      reviewGrades,
+      setGrade,
+    };
   },
 };
 </script>

@@ -1,6 +1,6 @@
 <template>
   <v-container class="d-flex justify-center align-center h-screen">
-    <v-form v-model="valid" @submit="" class="w-25">
+    <v-form v-model="valid" @submit.stop.prevent="handleSubmit" class="w-25">
       <v-row>
         <v-col>
           <div class="text-h4 text-center">Team Collaboration Tool</div>
@@ -29,7 +29,7 @@
       <v-row>
         <v-col>
           <div class="d-flex justify-center">
-            <v-btn size="large" color="secondary" @click="login">Login</v-btn>
+            <v-btn size="large" color="secondary" type="submit">Login</v-btn>
           </div>
         </v-col>
       </v-row>
@@ -53,11 +53,11 @@ export default {
     const valid = ref(false);
     const loginCreds = reactive({ email: "", password: "" });
     const authStore = useAuthStore();
-    async function login() {
-      await authStore.login(loginCreds);
+    function handleSubmit() {
+      authStore.login(loginCreds);
     }
 
-    return { valid, loginCreds, authStore, login };
+    return { valid, loginCreds, authStore, handleSubmit };
   },
 };
 </script>

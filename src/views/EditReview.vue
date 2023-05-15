@@ -96,6 +96,7 @@ import { reactive, ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { useAuthStore } from "@/stores/Auth";
 import { useRoute } from "vue-router";
+import router from "@/router";
 export default {
   setup() {
     const values = reactive({
@@ -106,6 +107,7 @@ export default {
     });
     const teams = ref([]);
     const selectedTeam = ref("");
+    const reviewId = useRoute().params.reviewId;
 
     const assignedDevs = computed(() => {
       const tempTeam = teams.value.find(
@@ -143,16 +145,33 @@ export default {
         values.reviewersIds.splice(values.reviewersIds.indexOf(devId), 1);
       }
     }
+
+    function handleSubmit() {
+      axios
+        .put(`http://localhost:8080/review/edit/${reviewId}`, values, {
+          headers: { Authorization: "Bearer " + useAuthStore().getToken },
+        })
+        .then(router.push)
+        .catch((error) => {
+          if (error.response) {
+            console.log("Data :", error.response.data);
+            console.log("Status :" + error.response.status);
+            if (error.response.status == 500) {
+              useAuthStore().logout();
+            }
+          } else if (error.request) {
+            console.log(error.request);
+          } else {
+            console.log("Error", error.message);
+          }
+        });
+      router.push("/home");
+    }
     async function loadReview() {
       await axios
-        .get(
-          `http://localhost:8080/review/get/review/${
-            useRoute().params.reviewId
-          }`,
-          {
-            headers: { Authorization: "Bearer " + useAuthStore().getToken },
-          }
-        )
+        .get(`http://localhost:8080/review/get/review/${reviewId}`, {
+          headers: { Authorization: "Bearer " + useAuthStore().getToken },
+        })
         .then((response) => {
           response.data.reviewers.forEach((reviewer) =>
             values.reviewersIds.push(reviewer.id)
@@ -204,6 +223,7 @@ export default {
     });
 
     return {
+      handleSubmit,
       handleDev,
       values,
       teams,

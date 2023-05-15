@@ -92,10 +92,9 @@
   </v-form>
 </template>
 <script>
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { useAuthStore } from "@/stores/Auth";
-import { computed } from "vue";
 import router from "@/router";
 
 export default {
