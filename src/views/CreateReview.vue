@@ -114,12 +114,12 @@ export default {
         values.reviewersIds.splice(values.reviewersIds.indexOf(devId), 1);
       }
     }
-    function handleSubmit() {
-      axios
+    async function handleSubmit() {
+      await axios
         .post("http://localhost:8080/review/create", values, {
           headers: { Authorization: "Bearer " + useAuthStore().getToken },
         })
-        .then(router.push)
+        .then(router.push("/home"))
         .catch((error) => {
           if (error.response) {
             console.log("Data :", error.response.data);
@@ -133,7 +133,6 @@ export default {
             console.log("Error", error.message);
           }
         });
-      router.push("/home");
     }
 
     const assignedDevs = computed(() => {
