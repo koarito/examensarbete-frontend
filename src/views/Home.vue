@@ -33,7 +33,11 @@
                   {{ review.author.firstName + " " + review.author.lastName }}
                 </td>
                 <td>{{ review.jiraId }}</td>
-                <td>{{ review.gitLink }}</td>
+                <td>
+                  <a :href="'https://' + review.gitLink">{{
+                    review.gitLink
+                  }}</a>
+                </td>
                 <td>{{ review.branch }}</td>
                 <td class="d-flex flex-row justify-space-between">
                   <div>
@@ -85,7 +89,11 @@
                   {{ review.status }}
                 </td>
                 <td>{{ review.jiraId }}</td>
-                <td>{{ review.gitLink }}</td>
+                <td>
+                  <a :href="'https://' + review.gitLink">{{
+                    review.gitLink
+                  }}</a>
+                </td>
                 <td>{{ review.branch }}</td>
                 <td>
                   <v-btn :to="'/edit/review/' + review.id" color="primary"

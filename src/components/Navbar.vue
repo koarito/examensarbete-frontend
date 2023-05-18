@@ -34,6 +34,7 @@ import { ref } from "vue";
 import router from "@/router";
 
 const authenticated = ref(useAuthStore().getToken);
+
 function navigate(route) {
   if (route == "login") {
     router.push("/");

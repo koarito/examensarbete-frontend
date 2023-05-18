@@ -1,5 +1,9 @@
 <template>
-  <v-form @submit.stop.prevent="handleSubmit">
+  <v-form
+    v-model="formValidity"
+    @submit.stop.prevent="handleSubmit"
+    validate-on="submit"
+  >
     <div class="padding">
       <v-sheet elevation="10" rounded class="wi">
         <v-container
@@ -17,6 +21,7 @@
                 color="primary"
                 label="Jira id"
                 v-model="values.jiraId"
+                :rules="rules"
               />
             </v-col>
           </v-row>
@@ -28,6 +33,7 @@
                 color="primary"
                 label="Git link"
                 v-model="values.gitLink"
+                :rules="rules"
               />
             </v-col>
           </v-row>
@@ -38,6 +44,7 @@
                 color="primary"
                 label="Git branch"
                 v-model="values.branch"
+                :rules="rules"
               />
             </v-col>
           </v-row>
@@ -108,6 +115,13 @@ export default {
     const teams = ref([]);
     const selectedTeam = ref("");
     const reviewId = useRoute().params.reviewId;
+    const formValidity = ref(false);
+    const rules = [
+      (value) => {
+        if (value) return true;
+        return "This is an required field";
+      },
+    ];
 
     const assignedDevs = computed(() => {
       const tempTeam = teams.value.find(
@@ -147,25 +161,26 @@ export default {
     }
 
     function handleSubmit() {
-      axios
-        .put(`http://localhost:8080/review/edit/${reviewId}`, values, {
-          headers: { Authorization: "Bearer " + useAuthStore().getToken },
-        })
-        .then(router.push)
-        .catch((error) => {
-          if (error.response) {
-            console.log("Data :", error.response.data);
-            console.log("Status :" + error.response.status);
-            if (error.response.status == 500) {
-              useAuthStore().logout();
+      if (formValidity.value) {
+        axios
+          .put(`http://localhost:8080/review/edit/${reviewId}`, values, {
+            headers: { Authorization: "Bearer " + useAuthStore().getToken },
+          })
+          .then(router.push("/home"))
+          .catch((error) => {
+            if (error.response) {
+              console.log("Data :", error.response.data);
+              console.log("Status :" + error.response.status);
+              if (error.response.status == 500) {
+                useAuthStore().logout();
+              }
+            } else if (error.request) {
+              console.log(error.request);
+            } else {
+              console.log("Error", error.message);
             }
-          } else if (error.request) {
-            console.log(error.request);
-          } else {
-            console.log("Error", error.message);
-          }
-        });
-      router.push("/home");
+          });
+      }
     }
     async function loadReview() {
       await axios
@@ -231,6 +246,8 @@ export default {
       assignedDevs,
       nonAssignedDevs,
       teamNames,
+      formValidity,
+      rules,
     };
   },
 };

@@ -1,5 +1,9 @@
 <template>
-  <v-form @submit.stop.prevent="handleSubmit">
+  <v-form
+    v-model="formValidity"
+    @submit.stop.prevent="handleSubmit"
+    validate-on="submit"
+  >
     <div class="padding">
       <v-sheet elevation="10" rounded class="wi">
         <v-container
@@ -16,6 +20,7 @@
                 type="text"
                 color="primary"
                 label="Email"
+                :rules="rules"
                 v-model="values.email"
               />
             </v-col>
@@ -26,6 +31,7 @@
                 type="text"
                 color="primary"
                 label="First name"
+                :rules="rules"
                 v-model="values.firstName"
               />
             </v-col>
@@ -36,6 +42,7 @@
                 type="text"
                 color="primary"
                 label="Last name"
+                :rules="rules"
                 v-model="values.lastName"
               />
             </v-col>
@@ -47,8 +54,8 @@
                 label="Password"
                 :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                 :type="showPassword ? 'text' : 'password'"
-                hint="Minimum 8 characters"
                 @click:append="showPassword = !showPassword"
+                :rules="passwordRules"
                 v-model="values.password"
               />
             </v-col>
@@ -61,8 +68,8 @@
                 aria-required="true"
                 :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                 :type="showPassword ? 'text' : 'password'"
-                hint="Minimum 8 characters"
                 @click:append="showPassword = !showPassword"
+                :rules="passwordConfRules"
                 v-model="values.passwordConf"
               />
             </v-col>
@@ -84,6 +91,7 @@ import router from "@/router";
 
 export default {
   setup() {
+    const formValidity = ref(false);
     const showPassword = ref(false);
     const values = reactive({
       email: "",
@@ -93,22 +101,44 @@ export default {
       passwordConf: "",
       role: "USER",
     });
+    const passwordRules = [
+      (value) => value.length >= 8 || "Minimum 8 characters",
+    ];
+    const passwordConfRules = [
+      (value) => value == values.password || "Password does not match!",
+    ];
+    const rules = [
+      (value) => {
+        if (value) return true;
+        return "This is an required field";
+      },
+    ];
     async function handleSubmit() {
-      await axios
-        .post("http://localhost:8080/api/auth/signup", values)
-        .then(router.push("/"))
-        .catch((error) => {
-          if (error.response) {
-            console.log("Data :", error.response.data);
-            console.log("Status :" + error.response.status);
-          } else if (error.request) {
-            console.log(error.request);
-          } else {
-            console.log("Error", error.message);
-          }
-        });
+      if (formValidity.value) {
+        await axios
+          .post("http://localhost:8080/api/auth/signup", values)
+          .then(router.push("/"))
+          .catch((error) => {
+            if (error.response) {
+              console.log("Data :", error.response.data);
+              console.log("Status :" + error.response.status);
+            } else if (error.request) {
+              console.log(error.request);
+            } else {
+              console.log("Error", error.message);
+            }
+          });
+      }
     }
-    return { values, showPassword, handleSubmit };
+    return {
+      formValidity,
+      values,
+      showPassword,
+      handleSubmit,
+      rules,
+      passwordRules,
+      passwordConfRules,
+    };
   },
 };
 </script>
